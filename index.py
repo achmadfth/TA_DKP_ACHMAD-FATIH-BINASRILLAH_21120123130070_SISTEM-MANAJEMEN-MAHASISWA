@@ -1,6 +1,5 @@
-# Modul 8 GUI Programming
-# tkinter, tkcalendar
 import datetime  # menangani tanggal dan waktu
+# Modul 8 GUI
 from tkinter import *  # GUI
 import tkinter.messagebox as mb  # kotak pesan
 from tkinter import ttk  # widget tambahan
@@ -20,13 +19,57 @@ cursor = connector.cursor()
 connector.execute(
     "CREATE TABLE IF NOT EXISTS MANAJEMEN_MAHASISWA (NAMA TEXT, EMAIL TEXT, NO_TELEPON TEXT, JENIS_KELAMIN TEXT, TGL_LAHIR TEXT, JURUSAN TEXT)"
 )
+
 # Modul 5 Class dan Constructor (Object Oriented Programming 1)
+# Class: LoginPage
+# Constructor: __init__
+class LoginPage:
+    def __init__(self, master):
+        self.master = master
+        self.master.title('Login Sistem Manajemen Mahasiswa')
+        self.master.geometry('400x300')
+        self.master.resizable(0, 0)
+
+        self.username_strvar = StringVar()
+        self.password_strvar = StringVar()
+
+        self.setup_login_ui()
+
+    def setup_login_ui(self):
+        self.master.config(bg='white')
+        Label(self.master, text="Selamat Datang", font=("Montserrat", 18, 'bold'), bg='white', fg='navy').pack(side=TOP, fill=X, pady=10)
+        Label(self.master, text="Silakan login untuk melanjutkan", font=("Arial", 10), bg='white').pack(side=TOP, fill=X)
+
+        login_frame = Frame(self.master, bg='white')
+        login_frame.place(relx=0.1, rely=0.2, relwidth=0.8, relheight=0.6)
+
+        Label(login_frame, text="Username", font=("Arial", 12), bg='white', anchor='w').place(relx=0.1, rely=0.1, relwidth=0.8)
+        username_entry = Entry(login_frame, textvariable=self.username_strvar, font=("Arial", 12))
+        username_entry.place(relx=0.1, rely=0.25, relwidth=0.8)
+
+        Label(login_frame, text="Password", font=("Arial", 12), bg='white', anchor='w').place(relx=0.1, rely=0.45, relwidth=0.8)
+        password_entry = Entry(login_frame, textvariable=self.password_strvar, font=("Arial", 12), show='*')
+        password_entry.place(relx=0.1, rely=0.6, relwidth=0.8)
+
+        Button(login_frame, text='Login', font=("Arial", 12), command=self.login, bg='#4CAF50', fg='white', relief='groove', borderwidth=2).place(relx=0.1, rely=0.8, relwidth=0.8)
+
+    def login(self):
+        username = self.username_strvar.get()
+        password = self.password_strvar.get()
+
+        if username == 'admin' and password == 'admin':
+            self.master.destroy()
+            main_window = Tk()
+            app = SchoolManagementSystem(main_window)
+            main_window.mainloop()
+
+        else:
+            mb.showerror('Login Gagal', 'Username atau Password salah')
+
 # Class: SchoolManagementSystem
 # Constructor: __init__
-# Class ini digunakan untuk mengorganisir seluruh sistem manajemen dalam sebuah objek, dan constructor digunakan untuk inisialisasi UI dan variabel.
 # Kelas utama untuk Sistem Manajemen Sekolah
 class SchoolManagementSystem:
-    # Konstruktor dengan parameter master yang merupakan root window
     def __init__(self, master):
         self.master = master
         self.master.title('Sistem Manajemen Mahasiswa')  # Judul window
@@ -38,14 +81,16 @@ class SchoolManagementSystem:
         self.rf_bg = '#ffe4e1'  # Misty Rose
 
 # Modul 1 Variabel, Tipe Data, dan Array
-# Variabel: name_strvar, email_strvar, contact_strvar, gender_strvar, stream_strvar, dob
-# Tipe Data: StringVar, DateEntry, String, Date
+# Variabel: name_strvar, email_strvar, contact_strvar, gender_strvar
+# Tipe Data: StringVar, DateEntry
         # Inisialisasi variabel yang digunakan dalam UI
         self.name_strvar = StringVar()
         self.email_strvar = StringVar()
         self.contact_strvar = StringVar()
         self.gender_strvar = StringVar()
         self.stream_strvar = StringVar()
+        self.is_editing = False
+        self.original_name = ""
 
         self.setup_ui()  # Memanggil fungsi setup_ui untuk setup tampilan
 
@@ -77,12 +122,16 @@ class SchoolManagementSystem:
         self.dob = DateEntry(left_frame, font=("Arial", 12), width=15)
         self.dob.place(x=20, rely=0.62)
 
-        Button(left_frame, text='Tambahkan', font=labelfont, command=self.add_record, width=18, bg='#4CAF50', fg='white', relief='groove', borderwidth=6).place(relx=0.025, rely=0.85)
+        Button(left_frame, text='Tambahkan Data', font=labelfont, command=self.add_record, width=18, bg='#4CAF50', fg='white', relief='groove', borderwidth=6).place(relx=0.025, rely=0.85)
 
         # Membuat tombol-tombol di frame tengah
-        Button(center_frame, text='Hapus Rekaman', font=labelfont, command=self.remove_record, width=15, bg='#f44336', fg='white', relief='groove', borderwidth=6).place(relx=0.1, rely=0.25)
-        Button(center_frame, text='Lihat Rekaman', font=labelfont, command=self.view_record, width=15, bg='#2196F3', fg='white', relief='groove', borderwidth=6).place(relx=0.1, rely=0.35)
-        Button(center_frame, text='Reset Bidang', font=labelfont, command=self.reset_fields, width=15, bg='#FFEB3B', fg='black', relief='groove', borderwidth=6).place(relx=0.1, rely=0.45)
+        Button(center_frame, text='Edit Data', font=labelfont, command=self.edit_record, width=15, bg='#ff9800', fg='white', relief='groove', borderwidth=6).place(relx=0.1, rely=0.55)
+        Button(center_frame, text='Hapus Semua Data', font=labelfont, command=self.remove_all_records, width=15, bg='#f44336', fg='white', relief='groove', borderwidth=6).place(relx=0.1, rely=0.85)
+
+        
+        Button(center_frame, text='Reset Bidang Input', font=labelfont, command=self.reset_fields, width=15, bg='#2196F3', fg='white', relief='groove', borderwidth=6).place(relx=0.1, rely=0.65)
+
+        Button(center_frame, text='Hapus Data', font=labelfont, command=self.remove_record, width=15, bg='#f44336', fg='white', relief='groove', borderwidth=6).place(relx=0.1, rely=0.75)
 
         # Membuat label untuk daftar mahasiswa di frame kanan
         Label(right_frame, text='Database Mahasiswa', font=headlabelfont, bg='maroon', fg='white').pack(side=TOP, fill=X)
@@ -110,12 +159,6 @@ class SchoolManagementSystem:
         # Menampilkan rekaman dari database
         self.display_records()
 
-    # Fungsi untuk mengatur ulang bidang input
-    def reset_fields(self):
-        for i in [self.name_strvar, self.email_strvar, self.contact_strvar, self.gender_strvar, self.stream_strvar]:
-            i.set('')
-        self.dob.set_date(datetime.datetime.now().date())
-
 # Modul 3 Perulangan (For, While)
 # For Loop: Digunakan dalam metode display_records untuk iterasi melalui hasil query database dan menambahkan data ke Treeview.
     # Fungsi untuk menampilkan rekaman dari database ke dalam treeview
@@ -136,12 +179,16 @@ class SchoolManagementSystem:
         jurusan = self.stream_strvar.get()
 
 # Modul 2 Pengkondisian (If, Else)
-# If, Else: Digunakan dalam metode add_record, remove_record, dan view_record untuk validasi input dan pengambilan keputusan berdasarkan kondisi tertentu.        
+# If, Else: Digunakan dalam metode add_record, remove_record, dan view_record untuk validasi input dan pengambilan keputusan berdasarkan kondisi tertentu.
         # Validasi input pengguna
         if not nama or not email or not kontak or not jenis_kelamin or not tgl_lahir or not jurusan:
             mb.showerror('Kesalahan!', "Harap isi semua bidang yang hilang!")
         else:
             try:
+                if self.is_editing:
+                    connector.execute('DELETE FROM MANAJEMEN_MAHASISWA WHERE NAMA=?', (self.original_name,))
+                    self.is_editing = False
+
                 # Menyimpan data ke database
                 connector.execute(
                 'INSERT INTO MANAJEMEN_MAHASISWA (NAMA, EMAIL, NO_TELEPON, JENIS_KELAMIN, TGL_LAHIR, JURUSAN) VALUES (?,?,?,?,?,?)', (nama, email, kontak, jenis_kelamin, tgl_lahir, jurusan)
@@ -153,24 +200,10 @@ class SchoolManagementSystem:
             except:
                 mb.showerror('Tipe Salah', 'Tipe nilai yang dimasukkan tidak akurat. Harap perhatikan bahwa bidang kontak hanya dapat berisi angka')
 
-    # Fungsi untuk menghapus rekaman dari database
-    def remove_record(self):
+    # Fungsi untuk mengedit rekaman
+    def edit_record(self):
         if not self.tree.selection():
-            mb.showerror('Kesalahan!', 'Silakan pilih item dari database')
-        else:
-            current_item = self.tree.focus()
-            values = self.tree.item(current_item)
-            selection = values["values"]
-            self.tree.delete(current_item)
-            connector.execute('DELETE FROM MANAJEMEN_MAHASISWA WHERE NAMA=? AND EMAIL=?', (selection[0], selection[1]))
-            connector.commit()
-            mb.showinfo('Selesai', 'Rekaman yang ingin Anda hapus telah berhasil dihapus.')
-            self.display_records()
-
-    # Fungsi untuk melihat rekaman yang dipilih
-    def view_record(self):
-        if not self.tree.selection():
-            mb.showerror('Kesalahan!', 'Silakan pilih rekaman untuk dilihat')
+            mb.showerror('Kesalahan!', 'Silakan pilih rekaman untuk diedit')
         else:
             current_item = self.tree.focus()
             values = self.tree.item(current_item)
@@ -180,9 +213,43 @@ class SchoolManagementSystem:
             self.contact_strvar.set(selection[2]); self.gender_strvar.set(selection[3])
             tanggal = datetime.date(int(selection[4][:4]), int(selection[4][5:7]), int(selection[4][8:]))
             self.dob.set_date(tanggal); self.stream_strvar.set(selection[5])
+            
+            self.is_editing = True
+            self.original_name = selection[0]
+
+  
+    def remove_record(self):
+        if not self.tree.selection():
+            mb.showerror('Kesalahan!', 'Silakan pilih rekaman untuk dihapus')
+        else:
+            confirm = mb.askyesno('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus rekaman ini?')
+            if confirm:
+                for selected_item in self.tree.selection():
+                    self.tree.delete(selected_item)
+                connector.execute('DELETE FROM MANAJEMEN_MAHASISWA WHERE NAMA=?', (self.name_strvar.get(),))
+                connector.commit()
+                self.reset_fields()
+
+    # Fungsi untuk mengatur ulang bidang input
+    def reset_fields(self):
+        self.name_strvar.set("")
+        self.email_strvar.set("")
+        self.contact_strvar.set("")
+        self.gender_strvar.set("")
+        self.dob.set_date(datetime.date.today())
+        self.stream_strvar.set("")
+
+    # Fungsi untuk menghapus semua data di database
+    def remove_all_records(self):
+        confirm = mb.askyesno('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus semua data?')
+        if confirm:
+            connector.execute('DELETE FROM MANAJEMEN_MAHASISWA')
+            connector.commit()
+            self.display_records()
+            mb.showinfo('Data Dihapus', 'Semua data berhasil dihapus')
 
 # Menjalankan aplikasi
 if __name__ == "__main__":
     root = Tk()
-    app = SchoolManagementSystem(root)
+    login_app = LoginPage(root)
     root.mainloop()
